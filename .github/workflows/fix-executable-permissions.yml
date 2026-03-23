@@ -10,7 +10,7 @@
 #
 # 主な処理：
 # ・リポジトリを checkout
-# ・.githooks/* に対して実行権限を付与（対象なしでも処理を継続）
+# ・.githooks/* と init_r.sh に対して実行権限を付与（対象なしでも処理を継続）
 # ・GitHub Actions 用の git ユーザー情報を設定
 # ・差分を判定し、変更がある場合のみコミット＆プッシュ
 # ・変更がない場合はメッセージを出力して終了
@@ -41,6 +41,13 @@ jobs:
 
           chmod +x .githooks/* || true
 
+      - name: Set executable permissions for init_r.sh
+        run: |
+          # 厳格モード: エラー時は即終了
+          set -euo pipefail
+
+          chmod +x init_r.sh || true
+
       - name: Commit and push changes if any
         run: |
           # 厳格モード: エラー時は即終了
@@ -52,7 +59,7 @@ jobs:
           if ! git diff --quiet; then
             git add -u
             git commit -m "Fix executable permissions automatically"
-            git push
+            git push origin "${GITHUB_REF#refs/heads/}"
           else
             echo "No permission changes detected."
           fi
